@@ -21,6 +21,29 @@
 
 RAPIDWRIGHT_PATH="$(dirname $(dirname $0))"
 
+# Inherit proxy settings from the host if they exist
+HTTPHOST=$(echo "$http_proxy" | sed 's/http:\/\///; s/\/.*//' | cut -d':' -f1)
+HTTPPORT=$(echo "$http_proxy" | sed 's/http:\/\///; s/\/.*//' | cut -d':' -f2)
+
+HTTPSHOST=$(echo "$https_proxy" | sed 's/http:\/\///; s/\/.*//' | cut -d':' -f1)
+HTTPSPORT=$(echo "$https_proxy" | sed 's/http:\/\///; s/\/.*//' | cut -d':' -f2)
+
+if [ -n "$HTTPSHOST" ]; then
+    HOST="$HTTPSHOST"
+elif [ -n "$HTTPHOST" ]; then
+    HOST="$HTTPHOST"
+else
+    HOST=""
+fi
+
+if [ -n "$HTTPSPORT" ]; then
+    PORT="$HTTPSPORT"
+elif [ -n "$HTTPPORT" ]; then
+    PORT="$HTTPPORT"
+else
+    PORT=""
+fi
+
 # Check that the main jar has been built
 # NOTE: Does not check that it is up-to-date
 MAIN_JAR=${RAPIDWRIGHT_PATH}/build/libs/main.jar
@@ -44,9 +67,9 @@ fi
 # If the first argument is likely to be a class name, then
 # execute that Java class' `main()` method
 if case $1 in "com.xilinx.rapidwright."*) true;; *) false;; esac; then
-    java -cp ${MAIN_JAR} "$@"
+    java -Dhttp.proxyHost=$HOST -Dhttp.proxyPort=$PORT -cp ${MAIN_JAR} "$@" 
     exit
 fi
 
 # Otherwise use the default `MainEntrypoint` class
-java -jar ${MAIN_JAR} "$@"
+java -Dhttp.proxyHost=$HOST -Dhttp.proxyPort=$PORT -jar ${MAIN_JAR} "$@" 

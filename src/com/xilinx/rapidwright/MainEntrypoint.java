@@ -103,6 +103,8 @@ import com.xilinx.rapidwright.util.StringTools;
 import com.xilinx.rapidwright.util.Unzip;
 import com.xilinx.rapidwright.util.performance_evaluation.PerformanceEvaluation;
 
+import com.xilinx.fpga24_routing_contest.PartialRouterPhysNetlist;
+
 public class MainEntrypoint {
     interface MainStyleFunction<E extends Throwable> {
         void main(String[] args) throws E;
@@ -191,6 +193,8 @@ public class MainEntrypoint {
         addFunction("TileColumnPattern", TileColumnPattern::main);
         addFunction("Unzip", Unzip::main);
         addFunction("UpdateRoutingUsingSATRouter", UpdateRoutingUsingSATRouter::main);
+
+        addFunction("PartialRouterPhysNetlist", PartialRouterPhysNetlist::main);
     }
 
     private static void listModes(PrintStream ps) {

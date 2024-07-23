@@ -12,3 +12,9 @@
 /designs/
 interchange/schema/capnp/java.capnp
 *.orig
+
+/benchmarks
+/py_scripts
+/output
+/tmp
+/log

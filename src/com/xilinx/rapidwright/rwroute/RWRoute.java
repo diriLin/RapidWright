@@ -175,6 +175,11 @@ public class RWRoute{
 
     public static final EnumSet<Series> SUPPORTED_SERIES;
 
+    // HUS-related variables ->
+    private boolean isFactorSet = false;
+    private boolean isUseHUS = false;
+    // HUS-related variables <-
+
     static {
         SUPPORTED_SERIES = EnumSet.of(Series.UltraScale, Series.UltraScalePlus);
     }
@@ -852,6 +857,7 @@ public class RWRoute{
         initializeRouting();
         long lastIterationRnodeCount = 0;
         long lastIterationRnodeTime = 0;
+        boolean isCongestedDesign = false;
 
         while (routeIteration < config.getMaxIterations()) {
             long startIteration = System.nanoTime();
@@ -865,7 +871,39 @@ public class RWRoute{
                 }
             }
 
-            updateCostFactors();
+            if (isUseHUS) {
+                // An empirical approach to adjust bbox expansion
+                if (routeIteration == 3 && !isCongestedDesign) {
+                    // apply the defaul bbox expansion and rebuild the partition tree
+                    for (Connection connection : indirectConnections)
+                        connection.computeConnectionBoundingBox(config.getBoundingBoxExtensionX(), config.getBoundingBoxExtensionY(), routingGraph.nextLagunaColumn, routingGraph.prevLagunaColumn);
+                    // partitionTree = new PartitionTree(sortedIndirectConnections, design.getDevice().getColumns(), design.getDevice().getRows());
+                }
+                if (routeIteration == 1) {
+                    // determine the congested design based on the ratio of overused rnode number to the number of connections
+                    long overUseCnt = 0;
+                    for (RouteNode rnode : routingGraph.getRnodes())
+                        if (rnode.getOccupancy() > RouteNode.capacity)
+                            overUseCnt ++;
+                    if (overUseCnt * 1.0 / numConnectionsToRoute > 0.5) 
+                        isCongestedDesign = true;
+
+                    if (!isCongestedDesign) {
+                        // apply smalller bbox expansion for uncongested designs
+                        for (Connection connection : indirectConnections)
+                            connection.computeConnectionBoundingBox((short)2, (short)5, routingGraph.nextLagunaColumn, routingGraph.prevLagunaColumn);
+                        // partitionTree = new PartitionTree(sortedIndirectConnections, design.getDevice().getColumns(), design.getDevice().getRows());
+                    }
+                }
+
+                // update congestion factors
+                if (isCongestedDesign)
+                    updateCostFactors2(); // Hybrid updating strategy
+                else
+                    updateCostFactors(); // RWRoute default updating strategy
+            } else {
+                updateCostFactors();
+            }
 
             rnodesCreatedThisIteration = routingGraph.numNodes() - lastIterationRnodeCount;
             List<Connection> unroutableConnections = getUnroutableConnections();
@@ -1236,6 +1274,25 @@ public class RWRoute{
      */
     private void updateCostFactors() {
         updateCongestionCosts.start();
+        presentCongestionFactor *= config.getPresentCongestionMultiplier();
+        presentCongestionFactor = Math.min(presentCongestionFactor, config.getMaxPresentCongestionFactor());
+        updateCost();
+        updateCongestionCosts.stop();
+    }
+
+    /**
+     * Updates the congestion cost factors for congested designs.
+     */
+    private void updateCostFactors2() {
+        updateCongestionCosts.start();
+        float congestedConnRatio = (float)connectionsRoutedIteration / sortedIndirectConnections.size();
+		// Hybrid updating strategy: slow down the increasing of the present congestion factor; increase the historical congestion factor
+        if (congestedConnRatio < 0.4) { 
+            config.setPresentCongestionMultiplier((float)1.1);
+            historicalCongestionFactor = 2;
+            isFactorSet = true;
+        }
+        
         presentCongestionFactor *= config.getPresentCongestionMultiplier();
         presentCongestionFactor = Math.min(presentCongestionFactor, config.getMaxPresentCongestionFactor());
         updateCost();
