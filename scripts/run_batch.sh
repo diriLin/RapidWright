@@ -51,17 +51,17 @@ ln -s $(pwd)/timing $tmp_run_dir
 ln -s $(pwd)/tcl $tmp_run_dir
 
 # parameters
-useHUS=1
-timingDriven=1
+useHUS=true
+timingDriven=false
 alpha=1.1
-beta=2
+beta=2.4
 
 parameters=""
-if [ $timingDriven ]
+if [ "$timingDriven" == true ]
 then
     parameters="$parameters --timingDriven"
 fi
-if [ $useHUS ]
+if [ "$useHUS" == true ]
 then
     parameters="$parameters --useHUS --HUSAlpha $alpha --HUSBeta $beta"
 fi
