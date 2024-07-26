@@ -176,8 +176,9 @@ public class RWRoute{
     public static final EnumSet<Series> SUPPORTED_SERIES;
 
     // HUS-related variables ->
-    private boolean isFactorSet = false;
-    private boolean isUseHUS = false;
+    private boolean isCongestedDesign;
+    private boolean isFactorSet;
+    private boolean isUseHUS;
     // HUS-related variables <-
 
     static {
@@ -256,6 +257,10 @@ public class RWRoute{
         nodesPushed = 0;
         nodesPopped = 0;
         overUsedRnodes = new HashSet<>();
+
+        isFactorSet = false;
+        isUseHUS = config.isUseHUS();
+        isCongestedDesign = false;
 
         routerTimer.getRuntimeTracker("Initialization").stop();
     }
@@ -857,7 +862,6 @@ public class RWRoute{
         initializeRouting();
         long lastIterationRnodeCount = 0;
         long lastIterationRnodeTime = 0;
-        boolean isCongestedDesign = false;
 
         while (routeIteration < config.getMaxIterations()) {
             long startIteration = System.nanoTime();
@@ -898,7 +902,7 @@ public class RWRoute{
 
                 // update congestion factors
                 if (isCongestedDesign)
-                    updateCostFactors2(); // Hybrid updating strategy
+                    updateCostFactorsHistoricalCentric(); // Hybrid updating strategy
                 else
                     updateCostFactors(); // RWRoute default updating strategy
             } else {
@@ -1283,13 +1287,13 @@ public class RWRoute{
     /**
      * Updates the congestion cost factors for congested designs.
      */
-    private void updateCostFactors2() {
+    private void updateCostFactorsHistoricalCentric() {
         updateCongestionCosts.start();
         float congestedConnRatio = (float)connectionsRoutedIteration / sortedIndirectConnections.size();
 		// Hybrid updating strategy: slow down the increasing of the present congestion factor; increase the historical congestion factor
         if (congestedConnRatio < 0.4) { 
-            config.setPresentCongestionMultiplier((float)1.1);
-            historicalCongestionFactor = 2;
+            config.setPresentCongestionMultiplier(config.getHUSAlpha());
+            historicalCongestionFactor = config.getHUSBeta();
             isFactorSet = true;
         }
         

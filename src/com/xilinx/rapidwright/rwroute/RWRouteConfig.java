@@ -94,6 +94,12 @@ public class RWRouteConfig {
     private boolean lutRoutethru;
     /* true to enable GND -> VCC optimization for LUT inputs */
     private boolean invertGndToVccForLutInputs;
+    /* true to use HUS */
+    private boolean useHUS;
+    /* The value of alpha in HUS*/
+    private float HUSAlpha;
+    /* The value of Beta in HUS*/
+    private float HUSBeta;
 
     /** Constructs a Configuration Object */
     public RWRouteConfig(String[] arguments) {
@@ -125,6 +131,9 @@ public class RWRouteConfig {
         lutPinSwapping = false;
         lutRoutethru = false;
         invertGndToVccForLutInputs = true;
+        useHUS = false;
+        HUSAlpha = 1.1f;
+        HUSBeta = 2f;
         if (arguments != null) {
             parseArguments(arguments);
         }
@@ -232,6 +241,15 @@ public class RWRouteConfig {
                 break;
             case "--noInvertGndToVccForLutInputs":
                 setInvertGndToVccForLutInputs(false);
+                break;
+            case "--useHUS":
+                setUseHUS(Boolean.parseBoolean(arguments[++i]));
+                break;
+            case "--HUSAlpha":
+                setHUSAlpha(Float.parseFloat(arguments[++i]));
+                break;
+            case "--HUSBeta":
+                setHUSBeta(Float.parseFloat(arguments[++i]));
                 break;
             default:
                 throw new IllegalArgumentException("ERROR: RWRoute argument '" + arg + "' not recognized.");
@@ -886,6 +904,62 @@ public class RWRouteConfig {
         this.verbose = verbose;
     }
 
+    /** Checks if the hybrid update strategy (HUS) is enabled
+     *  if true, the router will calculate the value of "isCongestedDesign" at the end of first iteration,
+     *  and replace the original cost update function with updateCostFactorsHistoricalCentric() if the value of "isCongestedDesign" is true
+     *  Default: false.
+     */
+    public boolean isUseHUS() {
+        return useHUS;
+    }
+
+    /**
+     * Sets useHUS.
+     * If true, the router will calculate the value of "isCongestedDesign" at the end of first iteration, 
+     * and replace the original cost update function with updateCostFactorsHistoricalCentric() if the value of "isCongestedDesign" is true
+     * Default: false.
+     * @param useHUS true to enable the hybrid update strategy (HUS)
+     */
+    public void setUseHUS(boolean useHUS) {
+        this.useHUS = useHUS;
+    }
+
+    /**
+     * Gets the value of alpha in the hybrid update strategy (HUS)
+     * Default: 2
+     * @return the value of alpha in the hybrid update strategy (HUS)
+     */
+    public float getHUSAlpha() {
+        return HUSAlpha;
+    }
+
+    /**
+     * Sets the value of alpha in the hybrid update strategy (HUS)
+     * Default: 2
+     * @param HUSAlpha
+     */
+    public void setHUSAlpha(float HUSAlpha) {
+        this.HUSAlpha = HUSAlpha;
+    }
+
+    /**
+     * Gets the value of beta in the hybrid update strategy (HUS)
+     * Default: 1.1
+     * @return the value of beta in the hybrid update strategy (HUS)
+     */
+    public float getHUSBeta() {
+        return HUSBeta;
+    }
+
+    /**
+     * Sets the value of beta in the hybrid update strategy (HUS)
+     * Default: 1.1
+     * @param HUSBeta the value of beta in the hybrid update strategy (HUS)
+     */
+    public void setHUSBeta(float HUSBeta) {
+        this.HUSBeta = HUSBeta;
+    }
+
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
@@ -922,6 +996,11 @@ public class RWRouteConfig {
         s.append(MessageGenerator.formatString("Historical congestion factor: ", historicalCongestionFactor));
         s.append(MessageGenerator.formatString("LUT pin swapping: ", isLutPinSwapping()));
         s.append(MessageGenerator.formatString("LUT routethrus: ", isLutRoutethru()));
+        s.append(MessageGenerator.formatString("use HUS: ", useHUS));
+        if (isUseHUS()) {
+            s.append(MessageGenerator.formatString("HUS Alpha: ", HUSAlpha));
+            s.append(MessageGenerator.formatString("HUS Beta: ", HUSBeta));
+        }
 
         return s.toString();
     }

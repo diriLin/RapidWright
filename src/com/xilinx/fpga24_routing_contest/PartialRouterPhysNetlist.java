@@ -23,7 +23,7 @@ import java.util.List;
 
 public class PartialRouterPhysNetlist {
     public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
+        if (args.length <= 2) {
             System.err.println("USAGE: <input.phys> <output.phys>");
             return;
         }
@@ -49,12 +49,40 @@ public class PartialRouterPhysNetlist {
                 pinsToRoute.addAll(net.getSinkPins());
             }
         }
+        
+        // set timing-driven and HUS parameters
+        boolean useHUS = false;
+        String HUSAlpha =  "1.1";
+        String HUSBeta = "2";
+        boolean timingDriven = false;
+        for (int i = 2; i < args.length; i++) {
+            String arg = args[i];
+            switch (arg) {
+                case "--useHUS":
+                    useHUS = true;
+                    break;
+                case "--timingDriven":
+                    timingDriven = true;
+                    break;
+                case "--HUSAlpha":
+                    HUSAlpha = args[++i];
+                    break;
+                case "--HUSBeta":
+                    HUSBeta = args[++i];
+                    break;
+                default:
+                    break;
+            }
+        }
 
         List<String> routerArgs = new ArrayList<>();
         // Same options as PartialRouter.routeDesignPartialNonTimingDriven()
         routerArgs.add("--fixBoundingBox");
         routerArgs.add("--useUTurnNodes");
-        routerArgs.add("--nonTimingDriven");
+        if (timingDriven)
+            routerArgs.add("--timingDriven");
+        else
+            routerArgs.add("--nonTimingDriven");
         routerArgs.add("--verbose");
         // These options are set to their default value, a subset of which are duplicated here
         // to ease modification; full documentation is available in RWRouteConfig.java
@@ -64,6 +92,10 @@ public class PartialRouterPhysNetlist {
         routerArgs.addAll(List.of("--historicalCongestionFactor", "1"));
         // Maximum number of iterations has been increased from the default of 100
         routerArgs.addAll(List.of("--maxIterations", "150"));
+        // Add HUS options
+        routerArgs.addAll(List.of("--useHUS", String.valueOf(useHUS)));
+        routerArgs.addAll(List.of("--HUSAlpha", HUSAlpha));
+        routerArgs.addAll(List.of("--HUSBeta", HUSBeta));
 
         // Optionally, allow RWRoute to perform LUT pin swapping such that all LUT input sinks
         // are considered to be equivalent
