@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# prepare
 all_benchmarks=(
             logicnets_jscl \
             boom_med_pb           \
@@ -46,12 +47,32 @@ cp -r build $tmp_run_dir
 ln -s $(pwd)/jars $tmp_run_dir
 ln -s $(pwd)/benchmarks $tmp_run_dir
 ln -s $(pwd)/data $tmp_run_dir
+ln -s $(pwd)/timing $tmp_run_dir
+ln -s $(pwd)/tcl $tmp_run_dir
 
+# parameters
+useHUS=1
+timingDriven=1
+alpha=1.1
+beta=2
+
+parameters=""
+if [ $timingDriven ]
+then
+    parameters="$parameters --timingDriven"
+fi
+if [ $useHUS ]
+then
+    parameters="$parameters --useHUS --HUSAlpha $alpha --HUSBeta $beta"
+fi
+(echo $parameters) | tee $log_dir/info
+
+# run
 cd $tmp_run_dir
 ./bin/rapidwright Jython -c "FileTools.ensureDataFilesAreStaticInstallFriendly('xcvu3p')"
 for bm in ${all_benchmarks[@]}
 do
-    echo "(/usr/bin/time ./bin/rapidwright PartialRouterPhysNetlist benchmarks/${bm}_unrouted.phys ${output_dir}/${bm}_cufr.phys) 2>&1 | tee ${log_dir}/${bm}_cufr.phys.log"
-	(/usr/bin/time ./bin/rapidwright PartialRouterPhysNetlist benchmarks/${bm}_unrouted.phys ${output_dir}/${bm}_cufr.phys) 2>&1 | tee ${log_dir}/${bm}_cufr.phys.log
+    echo "(/usr/bin/time ./bin/rapidwright PartialRouterPhysNetlist benchmarks/${bm}_unrouted.phys ${output_dir}/${bm}_cufr.phys $parameters) 2>&1 | tee ${log_dir}/${bm}_cufr.phys.log"
+    (/usr/bin/time ./bin/rapidwright PartialRouterPhysNetlist benchmarks/${bm}_unrouted.phys ${output_dir}/${bm}_cufr.phys $parameters) 2>&1 | tee ${log_dir}/${bm}_cufr.phys.log
 done
 cd $root_dir
