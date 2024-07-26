@@ -104,6 +104,7 @@ import com.xilinx.rapidwright.util.Unzip;
 import com.xilinx.rapidwright.util.performance_evaluation.PerformanceEvaluation;
 
 import com.xilinx.fpga24_routing_contest.PartialRouterPhysNetlist;
+import com.xilinx.fpga24_routing_contest.CheckPhysNetlist;
 
 public class MainEntrypoint {
     interface MainStyleFunction<E extends Throwable> {
@@ -195,6 +196,7 @@ public class MainEntrypoint {
         addFunction("UpdateRoutingUsingSATRouter", UpdateRoutingUsingSATRouter::main);
 
         addFunction("PartialRouterPhysNetlist", PartialRouterPhysNetlist::main);
+        addFunction("CheckPhysNetlist", CheckPhysNetlist::main);
     }
 
     private static void listModes(PrintStream ps) {
