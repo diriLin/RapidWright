@@ -1,16 +1,16 @@
 bm=$1
 
-useHUS=1
+useHUS=true
 alpha=1.1
-beta=2
-timingDriven=true
+beta=1.8
+timingDriven=false
 
 parameters=""
-if [ $timingDriven ]
+if [ "$timingDriven" == true ]
 then
     parameters="$parameters --timingDriven"
 fi
-if [ $useHUS ]
+if [ "$useHUS" == true ]
 then
     parameters="$parameters --useHUS --HUSAlpha $alpha --HUSBeta $beta"
 fi
