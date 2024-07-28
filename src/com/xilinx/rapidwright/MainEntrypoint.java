@@ -105,6 +105,7 @@ import com.xilinx.rapidwright.util.performance_evaluation.PerformanceEvaluation;
 
 import com.xilinx.fpga24_routing_contest.PartialRouterPhysNetlist;
 import com.xilinx.fpga24_routing_contest.CheckPhysNetlist;
+import com.xilinx.rapidwright.rwroute.CUFR;
 
 public class MainEntrypoint {
     interface MainStyleFunction<E extends Throwable> {
@@ -197,6 +198,7 @@ public class MainEntrypoint {
 
         addFunction("PartialRouterPhysNetlist", PartialRouterPhysNetlist::main);
         addFunction("CheckPhysNetlist", CheckPhysNetlist::main);
+        addFunction("CUFR", CUFR::main);
     }
 
     private static void listModes(PrintStream ps) {

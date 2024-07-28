@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -88,7 +89,7 @@ public class RWRoute{
     /** A list of direct connections that are easily routed through dedicated resources */
     private List<Connection> directConnections;
     /** Sorted indirect connections */
-    private List<Connection> sortedIndirectConnections;
+    protected List<Connection> sortedIndirectConnections;
     /** A list of global clock nets */
     protected List<Net> clkNets;
     /** Static nets */
@@ -110,13 +111,13 @@ public class RWRoute{
     /** The historical congestion cost factor */
     private float historicalCongestionFactor;
     /** Wirelength-driven weighting factor */
-    private float wlWeight;
+    protected float wlWeight;
     /** 1 - wlWeight */
-    private float oneMinusWlWeight;
+    protected float oneMinusWlWeight;
     /** Timing-driven weighting factor */
-    private float timingWeight;
+    protected float timingWeight;
     /** 1 - timingWeight */
-    private float oneMinusTimingWeight;
+    protected float oneMinusTimingWeight;
     /** Flag for whether LUT pin swaps are to be considered */
     protected boolean lutPinSwapping;
     /** Flag for whether LUT routethrus are to be considered */
@@ -152,7 +153,7 @@ public class RWRoute{
     /** The total number of connections that are routed */
     protected int connectionsRouted;
     /** The total number of connections routed in an iteration */
-    private int connectionsRoutedIteration;
+    protected int connectionsRoutedIteration;
     /** Total number of nodes pushed/popped from the queue */
     private long nodesPushed;
     private long nodesPopped;
@@ -736,7 +737,7 @@ public class RWRoute{
     /**
      * Initializes routing.
      */
-    private void initializeRouting() {
+    protected void initializeRouting() {
         routingGraph.initialize();
         queue.clear();
         routeIteration = 1;
@@ -869,11 +870,7 @@ public class RWRoute{
             if (config.isTimingDriven()) {
                 setRerouteCriticality();
             }
-            for (Connection connection : sortedIndirectConnections) {
-                if (shouldRoute(connection)) {
-                    routeConnection(connection);
-                }
-            }
+            routeSortedOrPartitionedConnections();
 
             if (isUseHUS) {
                 // An empirical approach to adjust bbox expansion
@@ -952,6 +949,14 @@ public class RWRoute{
             System.out.println("       Conflicting nodes: " + overUsedRnodes.size());
             for (RouteNode rnode : overUsedRnodes) {
                 System.out.println("              " + rnode);
+            }
+        }
+    }
+
+    protected void routeSortedOrPartitionedConnections() {
+        for (Connection connection : sortedIndirectConnections) {
+            if (shouldRoute(connection)) {
+                routeConnection(connection);
             }
         }
     }
@@ -1962,7 +1967,7 @@ public class RWRoute{
      * @param sharingFactor The sharing factor.
      * @return The sum of the congestion cost and the bias cost of rnode.
      */
-    private float getNodeCost(RouteNode rnode, Connection connection, int countSameSourceUsers, float sharingFactor) {
+    protected float getNodeCost(RouteNode rnode, Connection connection, int countSameSourceUsers, float sharingFactor) {
         boolean hasSameSourceUsers = countSameSourceUsers!= 0;
         float presentCongestionCost;
 
