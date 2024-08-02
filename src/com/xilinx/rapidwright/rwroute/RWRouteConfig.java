@@ -1046,6 +1046,8 @@ public class RWRouteConfig {
         if (isUseHUS()) {
             s.append(MessageGenerator.formatString("HUS Alpha: ", HUSAlpha));
             s.append(MessageGenerator.formatString("HUS Beta: ", HUSBeta));
+            s.append(MessageGenerator.formatString("HUS congested design threshold: ", HUSDetermineCongestedThreshold));
+            s.append(MessageGenerator.formatString("HUS historical-centric threshold: ", HUSStartHistoricalUpdateThreshold));
         }
 
         return s.toString();
