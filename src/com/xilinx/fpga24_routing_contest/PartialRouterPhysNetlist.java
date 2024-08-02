@@ -12,6 +12,8 @@ package com.xilinx.fpga24_routing_contest;
 import com.xilinx.rapidwright.design.Design;
 import com.xilinx.rapidwright.design.Net;
 import com.xilinx.rapidwright.design.SitePinInst;
+import com.xilinx.rapidwright.edif.EDIFNetlist;
+import com.xilinx.rapidwright.interchange.LogNetlistReader;
 import com.xilinx.rapidwright.interchange.PhysNetlistReader;
 import com.xilinx.rapidwright.interchange.PhysNetlistWriter;
 import com.xilinx.rapidwright.rwroute.PartialRouter;
@@ -23,7 +25,7 @@ import java.util.List;
 
 public class PartialRouterPhysNetlist {
     public static void main(String[] args) throws IOException {
-        if (args.length <= 2) {
+        if (args.length < 2) {
             System.err.println("USAGE: <input.phys> <output.phys>");
             return;
         }
@@ -63,6 +65,8 @@ public class PartialRouterPhysNetlist {
                     break;
                 case "--timingDriven":
                     timingDriven = true;
+                    EDIFNetlist netlist = LogNetlistReader.readLogNetlist(args[++i]);
+                    design.setNetlist(netlist);
                     break;
                 case "--HUSAlpha":
                     HUSAlpha = args[++i];

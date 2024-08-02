@@ -177,7 +177,6 @@ public class RWRoute{
 
     // HUS-related variables ->
     private boolean isCongestedDesign;
-    private boolean isFactorSet;
     private boolean isUseHUS;
     // HUS-related variables <-
 
@@ -258,7 +257,6 @@ public class RWRoute{
         nodesPopped = 0;
         overUsedRnodes = new HashSet<>();
 
-        isFactorSet = false;
         isUseHUS = config.isUseHUS();
         isCongestedDesign = false;
 
@@ -876,13 +874,6 @@ public class RWRoute{
             }
 
             if (isUseHUS) {
-                // An empirical approach to adjust bbox expansion
-                if (routeIteration == 3 && !isCongestedDesign) {
-                    // apply the defaul bbox expansion and rebuild the partition tree
-                    for (Connection connection : indirectConnections)
-                        connection.computeConnectionBoundingBox(config.getBoundingBoxExtensionX(), config.getBoundingBoxExtensionY(), routingGraph.nextLagunaColumn, routingGraph.prevLagunaColumn);
-                    // partitionTree = new PartitionTree(sortedIndirectConnections, design.getDevice().getColumns(), design.getDevice().getRows());
-                }
                 if (routeIteration == 1) {
                     // determine the congested design based on the ratio of overused rnode number to the number of connections
                     long overUseCnt = 0;
@@ -891,13 +882,6 @@ public class RWRoute{
                             overUseCnt ++;
                     if (overUseCnt * 1.0 / numConnectionsToRoute > 0.5) 
                         isCongestedDesign = true;
-
-                    if (!isCongestedDesign) {
-                        // apply smalller bbox expansion for uncongested designs
-                        for (Connection connection : indirectConnections)
-                            connection.computeConnectionBoundingBox((short)2, (short)5, routingGraph.nextLagunaColumn, routingGraph.prevLagunaColumn);
-                        // partitionTree = new PartitionTree(sortedIndirectConnections, design.getDevice().getColumns(), design.getDevice().getRows());
-                    }
                 }
 
                 // update congestion factors
@@ -1294,7 +1278,6 @@ public class RWRoute{
         if (congestedConnRatio < 0.4) { 
             config.setPresentCongestionMultiplier(config.getHUSAlpha());
             historicalCongestionFactor = config.getHUSBeta();
-            isFactorSet = true;
         }
         
         presentCongestionFactor *= config.getPresentCongestionMultiplier();

@@ -57,10 +57,6 @@ alpha=1.1
 beta=2.4
 
 parameters=""
-if [ "$timingDriven" == true ]
-then
-    parameters="$parameters --timingDriven"
-fi
 if [ "$useHUS" == true ]
 then
     parameters="$parameters --useHUS --HUSAlpha $alpha --HUSBeta $beta"
@@ -72,7 +68,12 @@ cd $tmp_run_dir
 ./bin/rapidwright Jython -c "FileTools.ensureDataFilesAreStaticInstallFriendly('xcvu3p')"
 for bm in ${all_benchmarks[@]}
 do
-    echo "(/usr/bin/time ./bin/rapidwright PartialRouterPhysNetlist benchmarks/${bm}_unrouted.phys ${output_dir}/${bm}_cufr.phys $parameters) 2>&1 | tee ${log_dir}/${bm}_cufr.phys.log"
-    (/usr/bin/time ./bin/rapidwright PartialRouterPhysNetlist benchmarks/${bm}_unrouted.phys ${output_dir}/${bm}_cufr.phys $parameters) 2>&1 | tee ${log_dir}/${bm}_cufr.phys.log
+    p="$parameters"
+    if [ "$timingDriven" == true ]
+    then
+        p="$p --timingDriven benchmarks/${bm}.netlist"
+    fi
+    echo "(/usr/bin/time ./bin/rapidwright PartialRouterPhysNetlist benchmarks/${bm}_unrouted.phys ${output_dir}/${bm}_cufr.phys $p) 2>&1 | tee ${log_dir}/${bm}_cufr.phys.log"
+    (/usr/bin/time ./bin/rapidwright PartialRouterPhysNetlist benchmarks/${bm}_unrouted.phys ${output_dir}/${bm}_cufr.phys $p) 2>&1 | tee ${log_dir}/${bm}_cufr.phys.log
 done
 cd $root_dir
