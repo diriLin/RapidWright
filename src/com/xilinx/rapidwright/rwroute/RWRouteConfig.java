@@ -100,6 +100,10 @@ public class RWRouteConfig {
     private float HUSAlpha;
     /* The value of Beta in HUS*/
     private float HUSBeta;
+    /* The threshold for determining whether a case is a congested design in HUS */
+    private float HUSDetermineCongestedThreshold;
+    /* The threshold for determining whether to start using historical-centric updating in HUS */
+    private float HUSStartHistoricalUpdateThreshold;
 
     /** Constructs a Configuration Object */
     public RWRouteConfig(String[] arguments) {
@@ -134,6 +138,8 @@ public class RWRouteConfig {
         useHUS = false;
         HUSAlpha = 1.1f;
         HUSBeta = 2f;
+        HUSDetermineCongestedThreshold = 0.5f;
+        HUSStartHistoricalUpdateThreshold = 0.4f;
         if (arguments != null) {
             parseArguments(arguments);
         }
@@ -250,6 +256,12 @@ public class RWRouteConfig {
                 break;
             case "--HUSBeta":
                 setHUSBeta(Float.parseFloat(arguments[++i]));
+                break;
+            case "--HUSDetermineCongestedThreshold":
+                setHUSDetermineCongestedThreshold(Float.parseFloat(arguments[++i]));
+                break;
+            case "--HUSStartHistoricalUpdateThreshold":
+                setHUSStartHistoricalUpdateThreshold(Float.parseFloat(arguments[++i]));
                 break;
             default:
                 throw new IllegalArgumentException("ERROR: RWRoute argument '" + arg + "' not recognized.");
@@ -958,6 +970,40 @@ public class RWRouteConfig {
      */
     public void setHUSBeta(float HUSBeta) {
         this.HUSBeta = HUSBeta;
+    }
+
+    /**
+     * Gets the threshold for determining whether a case is a congested design in HUS
+     * @return the threshold for determining whether a case is a congested design in HUS
+     */
+    public float getHUSDetermineCongestedThreshold() {
+        return HUSDetermineCongestedThreshold;
+    }
+
+    /**
+     * Sets the threshold for determining whether a case is a congested design in HUS
+     * Default: 0.5
+     * @param HUSDetermineCongestedThreshold the threshold for determining whether a case is a congested design in HUS
+     */
+    public void setHUSDetermineCongestedThreshold(float HUSDetermineCongestedThreshold) {
+        this.HUSDetermineCongestedThreshold = HUSDetermineCongestedThreshold;
+    }
+
+    /**
+     * Gets the threshold for determining whether to start using historical-centric updating in HUS
+     * @return the threshold for determining whether to start using historical-centric updating in HUS
+     */
+    public float getHUSStartHistoricalUpdateThreshold() {
+        return HUSStartHistoricalUpdateThreshold;
+    }
+
+    /**
+     * Sets the threshold for determining whether to start using historical-centric updating in HUS
+     * Default: 0.4
+     * @param HUSStartHistoricalUpdateThreshold the threshold for determining whether to start using historical-centric updating in HUS
+     */
+    public void setHUSStartHistoricalUpdateThreshold(float HUSStartHistoricalUpdateThreshold) {
+        this.HUSStartHistoricalUpdateThreshold = HUSStartHistoricalUpdateThreshold;
     }
 
     @Override

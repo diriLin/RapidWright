@@ -880,7 +880,7 @@ public class RWRoute{
                     for (RouteNode rnode : routingGraph.getRnodes())
                         if (rnode.getOccupancy() > RouteNode.capacity)
                             overUseCnt ++;
-                    if (overUseCnt * 1.0 / numConnectionsToRoute > 0.5) 
+                    if (overUseCnt * 1.0 / numConnectionsToRoute > config.getHUSDetermineCongestedThreshold()) 
                         isCongestedDesign = true;
                 }
 
@@ -1275,7 +1275,7 @@ public class RWRoute{
         updateCongestionCosts.start();
         float congestedConnRatio = (float)connectionsRoutedIteration / sortedIndirectConnections.size();
 		// Hybrid updating strategy: slow down the increasing of the present congestion factor; increase the historical congestion factor
-        if (congestedConnRatio < 0.4) { 
+        if (congestedConnRatio < config.getHUSStartHistoricalUpdateThreshold()) { 
             config.setPresentCongestionMultiplier(config.getHUSAlpha());
             historicalCongestionFactor = config.getHUSBeta();
         }
