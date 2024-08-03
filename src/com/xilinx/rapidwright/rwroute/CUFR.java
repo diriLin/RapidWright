@@ -53,6 +53,35 @@ import com.xilinx.rapidwright.timing.delayestimator.InterconnectInfo;
 import com.xilinx.rapidwright.util.ParallelismTools;
 import com.xilinx.rapidwright.util.RuntimeTracker;
 
+/**
+ *  This is the implementation of the parallel structure Recursive Partitioning Ternary Tree (RPTT)
+ *  in the solution of our team CUFR for the Runtime-First FPGA Interchange Routing Contest @ FPGA'24.
+ *  More detailed descriptions of our methods are in the following paper:
+ * 
+ *  Xinshi Zang, Wenhao Lin, Shiju Lin, Jinwei Liu and Evangeline F.Y. Young. An Open-Source Fast Parallel
+ *  Routing Approach for Commercial FPGAs. In Proceedings of the Great Lakes Symposium on VLSI 2024.
+ * 
+ *  Team CUFR improved the runtime performance of RWRoute through the following two aspects:
+ *  1.  Implemented Recursive Partitioning Ternary Tree (RPTT), an enhanced tree-based parallel structure, 
+ *      enabling CUFR to perform multi-threaded routing compared to the single-threaded RWRoute, thereby 
+ *      improving the runtime.
+ * 
+ *      The traditional bi-partition tree algorithm uses a cutline to bisect a partition, with connections 
+ *      crossing the cutlines placed in the corresponding tree nodes, and then recursively building sub-trees 
+ *      for two sub-partitions. During routing, it first sequetially routes the connections within a tree node, 
+ *      and then parallelly routes the two sub-trees.
+ * 
+ *      It was observed that the traditional bi-partition tree has a small number of tree nodes in the layers 
+ *      closer to the tree root, with each node containing a large amount of connections to be sequentially 
+ *      routed. This makes it difficult to fully utilize the available threads during the early stage of the 
+ *      routing process. To address this issue, RPTT also builds a sub-tree for the connections crossing the 
+ *      cutline to achieve more parallelism, and this sub-tree is routed prior to the sub-trees of the two 
+ *      sub-partitions.
+ *  
+ *  2.  Proposed Hybrid Updating Strategy (HUS) targeting on larger and more difficult routing cases.
+ *      (this strategy has been integrated into RWRoute)
+ *      
+ */
 public class CUFR extends RWRoute {
     /* The number of connections that have already been routed before a certain iteration */
     private int connectionIdBase;
