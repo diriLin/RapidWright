@@ -80,7 +80,6 @@ import com.xilinx.rapidwright.util.RuntimeTracker;
  *  
  *  2.  Proposed Hybrid Updating Strategy (HUS) targeting on larger and more difficult routing cases.
  *      (this strategy has been integrated into RWRoute)
- *      
  */
 public class CUFR extends RWRoute {
     /* The number of connections that have already been routed before a certain iteration */
@@ -122,18 +121,26 @@ public class CUFR extends RWRoute {
         }
     }
 
-    /* A partititoning tree */
+    /** 
+     *  The data structure of a tree node of RPTT.
+     */
     public class PartitionTreeNode {
-        /* Connections contained in all subtrees */
-        public List<Connection> connections;
-        /* Left subtree */
-        public PartitionTreeNode left;
-        /* Middle subtree */
-        public PartitionTreeNode middle;
-        /* Right subtree */
-        public PartitionTreeNode right;
-        /* Bounding box of this node. */
+        /** 
+         * Bounding box of this node. 
+         * All bounding boxes of the connections in this node should be within this box.
+         */
         public PartitionBBox bbox;
+        /* The union of all connections contained in the following three sub-trees */
+        public List<Connection> connections;
+        /**
+         *  Middle subtree 
+         *  This subtree contains the connections crossing the chosen cutline,
+         *  and it would be routed prior to the other two.
+         */
+        public PartitionTreeNode middle;
+        /* Two subtrees for the two sub-partitions */
+        public PartitionTreeNode left;
+        public PartitionTreeNode right;
     
         public PartitionTreeNode() {
             connections = null;
@@ -170,10 +177,19 @@ public class CUFR extends RWRoute {
             // sort the connections for routing
             cur.sortConnections();
     
-            // find the best cutline
+            // find the best cutline ->
+            // THIS PART CORRESPONDS TO Algorithm 2: Balance-driven Cutline IN THE PAPER ->
+
             int W = cur.bbox.xMax - cur.bbox.xMin + 1;
             int H = cur.bbox.yMax - cur.bbox.yMin + 1;
-    
+            
+            /*
+             * |xTotalBefore[x] - xTotalAfter[x]| is the difference in the number of connections between the 
+             * two sub-partitions when the cutline is positioned between locations x and (x+1) on the X-axis.
+             * 
+             * So as to yTotalBefore[] and yTotalAfter[]
+             */
+
             int[] xTotalBefore = new int[W - 1];
             int[] xTotalAfter = new int[W - 1];
             int[] yTotalBefore = new int[H - 1];
@@ -202,7 +218,11 @@ public class CUFR extends RWRoute {
             }
     
             double bestScore = Double.MAX_VALUE;
+
+            /* The position of the optimal cutline */
             double bestPos = Double.NaN;
+
+            /* The direction of the optimal cutline */
             PartitionAxis bestAxis = PartitionAxis.X;
     
             int maxXBefore = xTotalBefore[W - 2];
@@ -234,11 +254,23 @@ public class CUFR extends RWRoute {
                     bestAxis = PartitionAxis.Y;
                 }
             }
-    
+
+            // THIS PART CORRESPONDS TO Algorithm 2: Balance-driven Cutline IN THE PAPER <-
+            // find the best cutline <-
+
+            // THIS PART CORRESPONDS TO line 13 of Algorithm 1: RPTT-based Parallel Routing ->
+
+            /* 
+             * If bestPos is never updated, meaning that a cutline that can divide the original partition into two non-empty partitions cannot be found, 
+             * then the recursion to build the subtrees will not continue, and all three subtrees will be null.
+             */
             if (Double.isNaN(bestPos))
                 return;
+
+            // THIS PART CORRESPONDS TO line 13 of Algorithm 1: RPTT-based Parallel Routing <-
             
-            // recursively build tree
+            // recursively build tree ->
+            // THIS PART CORRESPONDS TO line 8-12 of Algorithm 1: RPTT-based Parallel Routing ->
             cur.left = new PartitionTreeNode();
             cur.left.connections = new ArrayList<>();
             cur.middle = new PartitionTreeNode();
@@ -255,6 +287,7 @@ public class CUFR extends RWRoute {
                         cur.right.connections.add(connection);
                     }
                     else {
+                        /* Those connections crossing the cutline will go into the middle sub-tree */
                         cur.middle.connections.add(connection);
                     }
                 }
@@ -271,6 +304,7 @@ public class CUFR extends RWRoute {
                         cur.right.connections.add(connection);
                     }
                     else {
+                        /* Those connections crossing the cutline will go into the middle sub-tree */
                         cur.middle.connections.add(connection);
                     }
                 }
@@ -285,8 +319,14 @@ public class CUFR extends RWRoute {
                 build(cur.middle);
             else
                 cur.middle = null;
+            // THIS PART CORRESPONDS TO line 8-12 of Algorithm 1: RPTT-based Parallel Routing <-
+            // recursively build tree <-
         }
     
+        /*
+         * Some connections, when expanding their bounding boxes during initialization, 
+         * may cause the bounding boxes to exceed the range of the FPGA device, so they need to be clamped.
+         */
         private int clampX(int x) { 
             return Math.min(Math.max(x, bbox.xMin), bbox.xMax); 
         }
